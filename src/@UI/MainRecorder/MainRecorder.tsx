@@ -14,10 +14,12 @@ import "video-react/dist/video-react.css";
 import { Player } from "video-react";
 // @ts-ignore
 import RecordRTC, {
+  invokeSaveAsDialog,
+  MediaStreamRecorder,
   // @ts-ignore
   RecordRTCPromisesHandler,
 } from "recordrtc";
-import { saveAs } from "file-saver";
+import FileSaver, { saveAs } from "file-saver";
 
 const MainRecorder: FC = () => {
   const theme: Theme = useTheme();
@@ -62,6 +64,18 @@ const MainRecorder: FC = () => {
           });
     const recorder: RecordRTC = new RecordRTCPromisesHandler(stream, {
       type: "video",
+      mimeType: "video/mp4",
+      bitsPerSecond: 128000,
+      audioBitsPerSecond: 128000,
+      videoBitsPerSecond: 128000,
+      frameInterval: 90,
+      video: HTMLVideoElement,
+      sampleRate: 96000,
+      desiredSampRate: 16000,
+      numberOfAudioChannels: 2,
+      bufferSize: 16384,
+      frameRate: 30,
+      bitrate: 128000,
     });
 
     await recorder.startRecording();
@@ -76,6 +90,8 @@ const MainRecorder: FC = () => {
       const blob: Blob = await recorder.getBlob();
       (stream as any).stop();
       setVideoUrlBlob(blob);
+      invokeSaveAsDialog(blob, 'video.mp4');
+
       setStream(null);
       setRecorder(null);
       setRecordingStatus(true);
@@ -84,11 +100,10 @@ const MainRecorder: FC = () => {
 
   const downloadVideo = () => {
     if (videoBlob) {
-      const mkvFile = new File([videoBlob], "demo.mkv", { type: "video/mkv" });
-      saveAs(mkvFile, `Video-${Date.now()}.mkv`);
-      // saveAs(videoBlob, `Video-${Date.now()}.webm`)
+      invokeSaveAsDialog(videoBlob, 'video.mp4');
     }
   };
+
 
   const changeType = () => {
     if (type === "screen") {
