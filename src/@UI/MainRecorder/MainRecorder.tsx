@@ -15,10 +15,12 @@ import "video-react/dist/video-react.css";
 import { Player } from "video-react";
 // @ts-ignore
 import RecordRTC, {
+  invokeSaveAsDialog,
+  MediaStreamRecorder,
   // @ts-ignore
   RecordRTCPromisesHandler,
 } from "recordrtc";
-import { saveAs } from "file-saver";
+import FileSaver, { saveAs } from "file-saver";
 
 const MainRecorder: FC = () => {
   const theme: Theme = useTheme();
@@ -80,12 +82,20 @@ const MainRecorder: FC = () => {
           audio: false,
         });
     const recorder: RecordRTC = new RecordRTCPromisesHandler(stream, {
-      type: 'video',
-      mimeType: 'video/x-matroska;codecs=avc1',
+      type: "video",
+      mimeType: "video/mp4",
+      bitsPerSecond: 128000,
+      audioBitsPerSecond: 128000,
+      videoBitsPerSecond: 128000,
+      frameInterval: 90,
+      video: HTMLVideoElement,
+      sampleRate: 96000,
+      desiredSampRate: 16000,
+      numberOfAudioChannels: 2,
+      bufferSize: 16384,
       frameRate: 30,
       bitrate: 128000,
-      bitsPerSecond: 128000
-    })
+    });
 
     await recorder.startRecording();
     setRecorder(recorder);
@@ -99,6 +109,8 @@ const MainRecorder: FC = () => {
       const blob: Blob = await recorder.getBlob();
       (stream as any).stop();
       setVideoUrlBlob(blob);
+      invokeSaveAsDialog(blob, 'video.mp4');
+
       setStream(null);
       setRecorder(null);
       setRecordingStatus(true);
@@ -108,8 +120,9 @@ const MainRecorder: FC = () => {
   const downloadVideo = () => {
     if (videoBlob) {
       const mp4File = new File([videoBlob], 'demo.ts', { type: "video/webm" })
+      invokeSaveAsDialog(videoBlob, 'video.mp4');
       //let blob = new Blob([videoBlob], { type: "video/mp4" })
-      saveAs(mp4File, `Video-${Date.now()}.mkv`)
+      //saveAs(mp4File, `Video-${Date.now()}.mkv`)
       const payload = new FormData();
       payload.append('video', mp4File);
       const requestOptions = {
@@ -125,6 +138,7 @@ const MainRecorder: FC = () => {
       // saveAs(videoBlob, `Video-${Date.now()}.webm`)
     }
   };
+
 
   const changeType = () => {
     if (type === "screen") {
