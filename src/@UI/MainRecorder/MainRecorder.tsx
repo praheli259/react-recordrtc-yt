@@ -40,6 +40,7 @@ const MainRecorder: FC = () => {
           })
     const recorder: RecordRTC = new RecordRTCPromisesHandler(stream, {
       type: 'video',
+      mimeType: 'video/x-matroska;codecs=avc1'
     })
 
     await recorder.startRecording()
@@ -61,8 +62,17 @@ const MainRecorder: FC = () => {
 
   const downloadVideo = () => {
     if (videoBlob) {
-      const mp4File = new File([videoBlob], 'demo.mp4', { type: 'video/mp4' })
-      saveAs(mp4File, `Video-${Date.now()}.mp4`)
+      const mp4File = new File([videoBlob], 'demo.mkv', { type: "video/x-matroska;codecs=avc1" })
+      //let blob = new Blob([videoBlob], { type: "video/mp4" })
+      saveAs(mp4File, `Video-${Date.now()}.mkv`)
+      const payload = new FormData();
+      payload.append('video', mp4File);
+      const requestOptions = {
+        method: 'POST',
+        body: payload
+      };
+      fetch('http://localhost:5001/uploadVideo', requestOptions)
+        .then(response => console.log(response))
       // saveAs(videoBlob, `Video-${Date.now()}.webm`)
     }
   }
